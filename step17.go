@@ -1,12 +1,8 @@
-//Ideas stolen from rob pike's example before methods could be assigned like functions
-//https://code.google.com/p/go/source/browse/src/pkg/sort/example_keys_test.go?spec=svn2bf8d07c14c178039b3220beb5d76fc07b56358a&name=2bf8d07c14c1&r=2bf8d07c14c178039b3220beb5d76fc07b56358a
-
-//cast functions: words, forward, reverse to type By
-//call their Sort methods
-//Sort creates a struct with a function member
+//lets add flags
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -59,42 +55,48 @@ func (this file) String() string {
 }
 
 func main() {
+	var filterType string
+	flag.StringVar(&filterType, "filter", "files", "files or dirs or size")
+	var sortType string
+	flag.StringVar(&sortType, "sort", "alpha", "alpha or reverse or time")
+	flag.Parse()
+
 	files := []file{}
 	dirs := []file{}
 	homeDir := os.ExpandEnv("$HOME")
-	fileWalk := func(path string, info os.FileInfo, err error) error {
+
+	walkers := make(map[string]filepath.WalkFunc)
+
+	walkers["files"] = func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
 			files = append(files, file{path, info})
 		}
 		return nil
 	}
-	dirWalk := func(path string, info os.FileInfo, err error) error {
+	walkers["dirs"] = func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			dirs = append(dirs, file{path, info})
 		}
 		return nil
 	}
-	fileFilter := filter(fileWalk)
-	walkers := []filepath.WalkFunc{fileFilter.size, dirWalk}
-	for _, w := range walkers {
-		filepath.Walk(homeDir, w)
-	}
+	walkers["size"] = filter(walkers["files"]).size
 
-	alpha := func(f1, f2 *file) bool {
+	filepath.Walk(homeDir, walkers[filterType])
+
+	sorters := make(map[string]By)
+
+	sorters["alpha"] = func(f1, f2 *file) bool {
 		return f1.path < f2.path
 	}
-	modTime := func(f1, f2 *file) bool {
+	sorters["time"] = func(f1, f2 *file) bool {
 		return f1.ModTime().UnixNano() < f2.ModTime().UnixNano()
 	}
-	reverse := func(f1, f2 *file) bool {
+	sorters["reverse"] = func(f1, f2 *file) bool {
 		return f1.path > f2.path
 	}
 
-	By(reverse).Sort(files)
-	fmt.Printf("files: %v\n", files)
-	By(alpha).Sort(files)
-	fmt.Printf("files: %v\n", files)
-	By(modTime).Sort(files)
+	By(sorters[sortType]).Sort(files)
+
 	for _, f := range files {
 		fmt.Printf("%v\n", f)
 	}

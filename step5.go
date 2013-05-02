@@ -1,31 +1,24 @@
+//Or return a function from a method, there are many ways to func a cat
 package main
 
 import (
 	"fmt"
-	"net/http"
+	"os"
+	"path/filepath"
 )
-
-var text = `
-	<html>
-		<head>
-			<title>gofuncyourself</title>
-		</head>
-		<body>
-			Return a function from a method
-		</body>
-	</html>`
 
 type state struct {
 }
 
-func (this *state) newHandler() func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, text)
+func (this *state) newWalker() func(path string, info os.FileInfo, err error) error {
+	return func(path string, info os.FileInfo, err error) error {
+		fmt.Printf("%v\n", path)
+		return nil
 	}
 }
 
 func main() {
 	s := &state{}
-	http.HandleFunc("/", s.newHandler())
-	http.ListenAndServe(":3000", nil)
+	homeDir := os.ExpandEnv("$HOME")
+	filepath.Walk(homeDir, s.newWalker())
 }

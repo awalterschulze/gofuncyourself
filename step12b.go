@@ -1,4 +1,4 @@
-//You're a reverse even less
+//lets sort again, now lets create a sortable list and sort it alphabetically in reverse
 package main
 
 import (
@@ -7,12 +7,6 @@ import (
 	"path/filepath"
 	"sort"
 )
-
-type LessFunc func(i, j int) bool
-
-func (this LessFunc) Less(i, j int) bool {
-	return this(i, j)
-}
 
 type filter func(path string, info os.FileInfo, err error) error
 
@@ -30,7 +24,6 @@ type file struct {
 
 type fileList struct {
 	list []file
-	LessFunc
 }
 
 func (this *fileList) Len() int {
@@ -41,12 +34,16 @@ func (this *fileList) Swap(i, j int) {
 	this.list[i], this.list[j] = this.list[j], this.list[i]
 }
 
-func (this *fileList) Alphabetical(i, j int) bool {
+func (this *fileList) Less(i, j int) bool {
 	return this.list[i].path < this.list[j].path
 }
 
-func (this *fileList) Reverse(i, j int) bool {
-	return this.Alphabetical(j, i)
+type Reverse struct {
+	sort.Interface
+}
+
+func (r Reverse) Less(i, j int) bool {
+	return r.Interface.Less(j, i)
 }
 
 func (this file) String() string {
@@ -74,8 +71,7 @@ func main() {
 	for _, w := range walkers {
 		filepath.Walk(homeDir, w)
 	}
-	files.LessFunc = files.Reverse
-	sort.Sort(files)
+	sort.Sort(&Reverse{files})
 	for _, f := range files.list {
 		fmt.Printf("%v\n", f)
 	}

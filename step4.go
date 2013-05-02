@@ -1,29 +1,23 @@
+//Or return a function from a method
+//This is very new for go
 package main
 
 import (
 	"fmt"
-	"net/http"
+	"os"
+	"path/filepath"
 )
-
-var text = `
-	<html>
-		<head>
-			<title>gofuncyourself</title>
-		</head>
-		<body>
-			This is very new even for go
-		</body>
-	</html>`
 
 type state struct {
 }
 
-func (this *state) handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, text)
+func (this *state) walker(path string, info os.FileInfo, err error) error {
+	fmt.Printf("%v\n", path)
+	return nil
 }
 
 func main() {
 	s := &state{}
-	http.HandleFunc("/", s.handler)
-	http.ListenAndServe(":3000", nil)
+	homeDir := os.ExpandEnv("$HOME")
+	filepath.Walk(homeDir, s.walker)
 }

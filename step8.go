@@ -1,22 +1,38 @@
-//since a function is a type it can be placed in a slice (list)
-//Thank you for the idea http://jordanorelli.tumblr.com/post/42369331748/function-types-in-go-golang
+//lets start using os.FileInfo to start doing something useful for a change
 package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
 )
 
-type pair func(a, b int)
+type state struct {
+	files map[string]time.Time
+	dirs  map[string]time.Time
+}
+
+func newState() *state {
+	return &state{make(map[string]time.Time), make(map[string]time.Time)}
+}
+
+func (this *state) newWalker() filepath.WalkFunc {
+	return func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			this.dirs[path] = info.ModTime()
+		} else {
+			this.files[path] = info.ModTime()
+		}
+		return nil
+	}
+}
 
 func main() {
-	pairs := []pair{
-		func(a, b int) { fmt.Printf("%v + %v = %v\n", a, b, a+b) },
-		func(a, b int) { fmt.Printf("%v - %v = %v\n", a, b, a-b) },
-		func(a, b int) { fmt.Printf("%v * %v = %v\n", a, b, a*b) },
-	}
-	a := 5
-	b := 7
-	for _, p := range pairs {
-		p(a, b)
-	}
+	s := newState()
+	homeDir := os.ExpandEnv("$HOME")
+	fn := s.newWalker()
+	filepath.Walk(homeDir, fn)
+	fmt.Printf("files: %v\n", s.files)
+	fmt.Printf("dirs: %v\n", s.dirs)
 }

@@ -1,33 +1,29 @@
+//a function can be a type
 package main
 
 import (
 	"fmt"
-	"net/http"
+	"os"
+	"path/filepath"
 )
 
-var text = `
-	<html>
-		<head>
-			<title>gofuncyourself</title>
-		</head>
-		<body>
-			Functions can be types
-		</body>
-	</html>`
-
-type handlerFunc func(w http.ResponseWriter, r *http.Request)
+//in the filepath package http://golang.org/pkg/path/filepath/#WalkFunc
+//their is a type declared WalkFunc
+//type WalkFunc func(path string, info os.FileInfo, err error) error
 
 type state struct {
 }
 
-func (this *state) newHandler() handlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, text)
+func (this *state) newWalker() filepath.WalkFunc {
+	return func(path string, info os.FileInfo, err error) error {
+		fmt.Printf("%v\n", path)
+		return nil
 	}
 }
 
 func main() {
 	s := &state{}
-	http.HandleFunc("/", s.newHandler())
-	http.ListenAndServe(":3000", nil)
+	homeDir := os.ExpandEnv("$HOME")
+	fn := s.newWalker()
+	filepath.Walk(homeDir, fn)
 }

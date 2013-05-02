@@ -1,31 +1,24 @@
+//Now lets call a method in a closure
 package main
 
 import (
 	"fmt"
-	"net/http"
+	"os"
+	"path/filepath"
 )
-
-var text = `
-	<html>
-		<head>
-			<title>gofuncyourself</title>
-		</head>
-		<body>
-			This is a little new
-		</body>
-	</html>`
 
 type state struct {
 }
 
-func (this *state) handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, text)
+func (this *state) walker(path string, info os.FileInfo, err error) error {
+	fmt.Printf("%v\n", path)
+	return nil
 }
 
 func main() {
 	s := &state{}
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		s.handler(w, r)
+	homeDir := os.ExpandEnv("$HOME")
+	filepath.Walk(homeDir, func(path string, info os.FileInfo, err error) error {
+		return s.walker(path, info, err)
 	})
-	http.ListenAndServe(":3000", nil)
 }

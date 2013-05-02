@@ -1,28 +1,26 @@
-//since functions are types we can declare methods on functions
+//lets simplify things for a change
 package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
 )
 
-type pair func(a, b int)
-
-func (this pair) swap(a, b int) {
-	this(b, a)
-}
-
 func main() {
-	pairs := []pair{
-		func(a, b int) { fmt.Printf("%v + %v = %v\n", a, b, a+b) },
-		func(a, b int) { fmt.Printf("%v - %v = %v\n", a, b, a-b) },
-		func(a, b int) { fmt.Printf("%v * %v = %v\n", a, b, a*b) },
+	files := make(map[string]time.Time)
+	dirs := make(map[string]time.Time)
+	homeDir := os.ExpandEnv("$HOME")
+	walker := func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			dirs[path] = info.ModTime()
+		} else {
+			files[path] = info.ModTime()
+		}
+		return nil
 	}
-	for i := 0; i < 3; i++ {
-		pairs = append(pairs, pairs[i].swap)
-	}
-	a := 5
-	b := 7
-	for _, p := range pairs {
-		p(a, b)
-	}
+	filepath.Walk(homeDir, walker)
+	fmt.Printf("files: %v\n", files)
+	fmt.Printf("dirs: %v\n", dirs)
 }

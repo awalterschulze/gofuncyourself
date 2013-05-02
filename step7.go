@@ -1,37 +1,27 @@
+//if we declare our own function type we will need to cast it to the filepath.WalkFunc function type
 package main
 
 import (
 	"fmt"
-	"net/http"
+	"os"
+	"path/filepath"
 )
 
-var top = `
-	<html>
-		<head>
-			<title>gofuncyourself</title>
-		</head>
-		<body>
-		The `
-var bottom = `
-		spider is getting tired	
-		</body>
-	</html>`
-
-type handlerFunc func(w http.ResponseWriter, r *http.Request)
+type WalkFunc func(path string, info os.FileInfo, err error) error
 
 type state struct {
-	i int
 }
 
-func (this *state) newHandler() handlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "%s %d %s", top, this.i, bottom)
+func (this *state) newWalker() WalkFunc {
+	return func(path string, info os.FileInfo, err error) error {
+		fmt.Printf("%v\n", path)
+		return nil
 	}
 }
 
 func main() {
-	s := &state{0}
-	http.HandleFunc("/", s.newHandler())
-	s.i = 1
-	http.ListenAndServe(":3000", nil)
+	s := &state{}
+	homeDir := os.ExpandEnv("$HOME")
+	fn := filepath.WalkFunc(s.newWalker())
+	filepath.Walk(homeDir, fn)
 }

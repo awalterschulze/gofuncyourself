@@ -1,41 +1,43 @@
-//let's look at sort again
+//since functions are types we can declare methods on them
 package main
 
 import (
 	"fmt"
-	"sort"
+	"os"
+	"path/filepath"
+	"time"
 )
 
-type Question struct {
-	Words string
-	Votes int
-}
+type filter func(path string, info os.FileInfo, err error) error
 
-type Questions struct {
-	List []Question
-}
-
-func (this *Questions) Len() int {
-	return len(this.List)
-}
-
-func (this *Questions) Less(i, j int) bool {
-	return this.List[i].Votes < this.List[j].Votes
-}
-
-func (this *Questions) Swap(i, j int) {
-	this.List[i], this.List[j] = this.List[j], this.List[i]
+func (this filter) size(path string, info os.FileInfo, err error) error {
+	if info.Size() > 1e7 {
+		return this(path, info, err)
+	}
+	return nil
 }
 
 func main() {
-	questions := &Questions{
-		[]Question{
-			Question{"We have seen this before, why are you doing this?", 2},
-			Question{"Do something useful", 1},
-			Question{"Go Func yourself", 10},
-		},
+	files := make(map[string]time.Time)
+	dirs := make(map[string]time.Time)
+	homeDir := os.ExpandEnv("$HOME")
+	fileWalk := func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			files[path] = info.ModTime()
+		}
+		return nil
 	}
-	fmt.Printf("before %v\n", questions)
-	sort.Sort(questions)
-	fmt.Printf("after %v\n", questions)
+	dirWalk := func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			dirs[path] = info.ModTime()
+		}
+		return nil
+	}
+	fileFilter := filter(fileWalk)
+	walkers := []filepath.WalkFunc{fileFilter.size, dirWalk}
+	for _, w := range walkers {
+		filepath.Walk(homeDir, w)
+	}
+	fmt.Printf("files: %v\n", files)
+	//fmt.Printf("dirs: %v\n", dirs)
 }

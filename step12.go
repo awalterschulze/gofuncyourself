@@ -1,49 +1,52 @@
-//reverse example stolen here: http://golang.org/pkg/sort/#example_Interface_reverse
+//lets sort again, but first lets create a list of files rather than a map
 package main
 
 import (
 	"fmt"
-	"sort"
+	"os"
+	"path/filepath"
 )
 
-type Question struct {
-	Words string
-	Votes int
+type filter func(path string, info os.FileInfo, err error) error
+
+func (this filter) size(path string, info os.FileInfo, err error) error {
+	if info.Size() > 1e7 {
+		return this(path, info, err)
+	}
+	return nil
 }
 
-type Questions struct {
-	List []Question
+type file struct {
+	path string
+	os.FileInfo
 }
 
-func (this *Questions) Len() int {
-	return len(this.List)
-}
-
-func (this *Questions) Less(i, j int) bool {
-	return this.List[i].Votes < this.List[j].Votes
-}
-
-func (this *Questions) Swap(i, j int) {
-	this.List[i], this.List[j] = this.List[j], this.List[i]
-}
-
-type Reverse struct {
-	sort.Interface
-}
-
-func (r Reverse) Less(i, j int) bool {
-	return r.Interface.Less(j, i)
+func (this file) String() string {
+	return fmt.Sprintf("%v(%v:%v)", this.path, this.ModTime(), this.Size())
 }
 
 func main() {
-	questions := &Questions{
-		[]Question{
-			Question{"We have seen this before, why are you doing this?", 2},
-			Question{"Do something useful", 1},
-			Question{"Go Func yourself", 10},
-		},
+	files := make([]file, 0)
+	dirs := make([]file, 0)
+	homeDir := os.ExpandEnv("$HOME")
+	fileWalk := func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			files = append(files, file{path, info})
+		}
+		return nil
 	}
-	fmt.Printf("before %v\n", questions)
-	sort.Sort(Reverse{questions})
-	fmt.Printf("after %v\n", questions)
+	dirWalk := func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			dirs = append(dirs, file{path, info})
+		}
+		return nil
+	}
+	fileFilter := filter(fileWalk)
+	walkers := []filepath.WalkFunc{fileFilter.size, dirWalk}
+	for _, w := range walkers {
+		filepath.Walk(homeDir, w)
+	}
+	for _, f := range files {
+		fmt.Printf("%v\n", f)
+	}
 }

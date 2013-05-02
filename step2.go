@@ -1,23 +1,25 @@
+//Here we see our first function pass as a parameter, we also saw this last time https://code.google.com/p/nogotovogo/source/browse/step2.go
 package main
 
 import (
 	"fmt"
-	"net/http"
+	"os"
+	"path/filepath"
 )
 
-var text = `
-	<html>
-		<head>
-			<title>gofuncyourself</title>
-		</head>
-		<body>
-			You have seen this <a href="https://code.google.com/p/nogotovogo/source/browse/step2.go">before</a>
-		</body>
-	</html>`
+func walker(path string, info os.FileInfo, err error) error {
+	fmt.Printf("%v\n", path)
+	return nil
+}
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, text)
-	})
-	http.ListenAndServe(":3000", nil)
+	homeDir := os.ExpandEnv("$HOME")
+	fmt.Printf("Your home directory is %v\n", homeDir)
+	//This is basically just an ls command, since walker just prints out the paths
+	filepath.Walk(homeDir, walker)
+	//We could also have done it with a closure
+	//filepath.Walk(homeDir, func(path string, info os.FileInfo, err error) error {
+	//	fmt.Printf("%v\n", path)
+	//	return nil
+	//})
 }
