@@ -1,5 +1,6 @@
-//Or return a function from a method
+//Or use a method from a function
 //This is very new for go
+//I think some people call this a functor?
 package main
 
 import (
