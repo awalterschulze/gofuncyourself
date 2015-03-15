@@ -1,6 +1,6 @@
 _Disclaimer: This lesson was specifically prepared for Stellenbosch Computer Club._
 
-_This follows the previous lesson [nogotovogo](https://code.google.com/p/nogotovogo)_
+_This follows the previous lesson [nogotovogo](https://https://github.com/awalterschulze/nogotovogo)_
 
 # A lesson in how to write go code like a motherfuncer #
 
@@ -10,4 +10,4 @@ This lesson will take a long obscure journey to some type of list a file command
 
 ## Installing Go ##
 
-https://code.google.com/p/nogotovogo/source/browse/installgo.sh
+https://github.com/awalterschulze/nogotovogo/source/browse/installgo.sh
