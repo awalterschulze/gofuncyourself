@@ -1,6 +1,6 @@
 _Disclaimer: This lesson was specifically prepared for Stellenbosch Computer Club._
 
-_This follows the previous lesson [nogotovogo](https://https://github.com/awalterschulze/nogotovogo)_
+_This follows the previous lesson [nogotovogo](shttps://github.com/awalterschulze/nogotovogo)_
 
 # A lesson in how to write go code like a motherfuncer #
 
